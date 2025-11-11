@@ -1,5 +1,9 @@
 poly	START	0
 
+	LDA 	#5
+	ADD	res
+	STA	res
+
 	LDA	#4
 	MUL	x
 	ADD	res
@@ -29,6 +33,6 @@ poly	START	0
 halt	J	halt	
 
 x	WORD	2
-res     WORD	5
+res     WORD	0
 
 	END	poly
