@@ -1,6 +1,6 @@
 print	START 	0
 
-		+LDA	#txt
+		LDA	#txt
 		STA	txtptr
 
 loop	CLEAR	A
@@ -8,7 +8,7 @@ loop	CLEAR	A
 		COMP	#0
 		JEQ	nl
 
-		WD	#0xAA
+		WD	#0xAA	. AA.dev
 		LDA	txtptr
 		ADD	#1
 		STA	txtptr
@@ -19,8 +19,8 @@ nl		LDA	#10
 
 halt	J	halt
 
-		ORG 	300
-txt		BYTE	C'SIX/XE\n'
+		. reserves 1 byte for each char
+txt		BYTE	C'SIX/XE' 
 		BYTE	0
 txtptr	WORD	0
 
