@@ -4,7 +4,7 @@ echo	START 	0
 	JSUB 	char
 	JSUB 	nl
 
-	+LDA	#txt
+	LDA	#txt
 	JSUB	string
 	JSUB 	nl
 
@@ -12,9 +12,6 @@ echo	START 	0
 	JSUB	num
 
 halt	J 	halt
-
-
-
 
 . A holds a char code
 char	WD 	#1
@@ -30,21 +27,27 @@ nl	STA	tmpA
 string	STA	tmpA
 	STL	tmpL
 
-strL	LDCH	@tmpA
+	STA	ptr
+strL	LDCH	@ptr
 	COMP	#0
 	JEQ	strEx
 	JSUB	char
-	LDA	tmpA
+	. increment ptr
+	LDA	ptr
 	ADD	#1
-	STA	tmpA	. dirty tmpA
+	STA	ptr
+
 	J	strL
 
 strEx	LDA	tmpA
 	LDL	tmpL
 	RSUB
 
+ptr 	RESW	1
+
 . A holds a number
 num	STA	tmpA
+
 	RMO	A, X
 
 	LDA	#digits
@@ -63,6 +66,7 @@ numL	RMO	X, A
 
 	RMO	S, X
 
+	. increment digPtr
 	STA	@digPtr
 	LDA	digPtr
 	ADD	#3
@@ -70,8 +74,9 @@ numL	RMO	X, A
 
 	J	numL
 
-write	LDA	#digits
-	COMP	digPtr
+. from digPtr to #digits
+write	LDA	#digits	
+	COMP	digPtr 
 	JEQ	numEx
 
 	LDA	digPtr
@@ -91,7 +96,7 @@ tmpL	RESW	1
 txt	BYTE	C'SIX/XE'
 	BYTE	0
 
-digits	RESW	10
+digits	RESW	5
 digPtr	RESW	1
 
 
