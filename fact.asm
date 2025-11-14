@@ -2,14 +2,30 @@ prog	START	0
 
 	JSUB	sinit
 
-	+LDA	#12
-	JSUB	fact
-	STA	ggg
+	. beremo 5x
+	JSUB	read
+	STA	@stkp
+	JSUB	spush
 
+	JSUB	read
+	STA	@stkp
+	JSUB	spush
+
+	JSUB	read
+	STA	@stkp
+	JSUB	spush
+
+	JSUB	read
+	STA	@stkp
+	JSUB	spush
+
+	JSUB	read
+	STA	@stkp
+	JSUB	spush
 
 halt	J	halt
-ggg	RESW	2
 
+. recursive
 fact	STL	@stkp
 	JSUB	spush
 	+STA	@stkp
@@ -28,6 +44,26 @@ bc	JSUB	spop
 	LDL	@stkp
 
 	MULR	X, A
+	RSUB
+
+. reads from device FA, returns num in A
+. clears registers B and S
+read	CLEAR	A
+	+RD	#0xFA
+	COMP	#10 . LF
+	JEQ	readEx
+
+	. B holds previous value
+	SUB	#48 	. asci -> [0..9]
+	RMO	A, S
+	RMO	B, A
+	MUL	#10	. multiply previous number by 10
+	ADDR	S, A	. add current digit
+	RMO	A, B	. store in B
+	J	read
+readEx	RMO	B, A
+	CLEAR	B	. cleanup
+	CLEAR	S
 	RSUB
 
 . set stkp
@@ -53,28 +89,70 @@ spop	STA	stkA
 	LDA	stkA
 	RSUB
 
+. A holds a number
+num	STA	tmpA
+
+	RMO	A, X
+
+	LDA	#digits
+	STA	digPtr	
+
+numL	RMO	X, A
+	COMP	#0
+	JEQ	write
+
+	DIV	#10
+	RMO	A, S	. S <- 123
+	MUL	#10
+	RMO	A, B	. B <- 1230
+	RMO	X, A	. A <- 1234
+	SUBR	B, A	. A <- 4
+
+	RMO	S, X
+
+	. increment digPtr
+	STA	@digPtr
+	LDA	digPtr
+	ADD	#3
+	STA	digPtr
+
+	J	numL
+
+. from digPtr to #digits
+write	LDA	#digits	
+	COMP	digPtr 
+	JEQ	numEx
+
+	LDA	digPtr
+	SUB	#3
+	STA	digPtr
+	LDA	@digPtr
+	ADD	#48
+	WD	#1	
+	J	write
+
+numEx	LDA	tmpA
+	RSUB	
+
+nl	STA	tmpA
+	LDA	#10
+	WD	#1
+	LDA	tmpA
+	RSUB
+
+. used by write
+tmpA    RESW	1
+tmpL	RESW	1
+
+txt	BYTE	C'SIX/XE'
+	BYTE	0
+
+digits	RESW	5
+digPtr	RESW	1
+
 . used by stack
 stkA	WORD	0 	
 stkp	WORD	0
 stk	RESW	1000
 
 	END	prog
-
-loop	RD	#0xFA
-	COMP	#10 . LF
-	J	calc
-
-	SUB	#48 . asci -> nr
-	RMO	A, S	. S <- 2
-	RMO	B, A	. A <- 1
-	MUL	#10	. A <- 10
-	ADDR	S, A	. A <_ 12
-	RMO	A, B
-	CLEAR	A
-	J	loop
-
-calc	RMO	A, B
-	CLEAR	B
-	CLEAR	S
-	JSUB	fact
-	J	loop
