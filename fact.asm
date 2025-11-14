@@ -2,26 +2,8 @@ prog	START	0
 
 	JSUB	sinit
 
-	. beremo 5x
 	JSUB	read
-	STA	@stkp
-	JSUB	spush
-
-	JSUB	read
-	STA	@stkp
-	JSUB	spush
-
-	JSUB	read
-	STA	@stkp
-	JSUB	spush
-
-	JSUB	read
-	STA	@stkp
-	JSUB	spush
-
-	JSUB	read
-	STA	@stkp
-	JSUB	spush
+	JSUB	write
 
 halt	J	halt
 
@@ -47,7 +29,6 @@ bc	JSUB	spop
 	RSUB
 
 . reads from device FA, returns num in A
-. clears registers B and S
 read	CLEAR	A
 	+RD	#0xFA
 	COMP	#10 . LF
@@ -62,9 +43,43 @@ read	CLEAR	A
 	RMO	A, B	. store in B
 	J	read
 readEx	RMO	B, A
-	CLEAR	B	. cleanup
-	CLEAR	S
 	RSUB
+
+. A holds a number
+write	STL	@stkp
+	JSUB	spush
+	
+wloop	RMO	A, B 	. B holds original value
+	DIV	#10
+	RMO	A, T	. this value will be used in next iteration
+	MUL	#10
+	RMO	A, S 	. temp save
+	RMO	B, A
+	SUBR	S, A	. a holds the digit
+
+	. push digit to stack
+	STA	@stkp
+	JSUB	spush
+	. increase len
+	LDA	len
+	ADD	#1
+	STA	len
+
+	RMO	T, A
+	COMP	#0	. if next value is 0 continue to print
+	JGT	wloop
+
+print   JSUB	spop
+	LDA	@stkp
+	ADD	#48
+	WD	#1
+	TIX	len
+	JLT	print
+	
+	JSUB	spop
+	LDL	@stkp
+	RSUB
+len	WORD	0
 
 . set stkp
 sinit	STA	stkA
@@ -88,67 +103,6 @@ spop	STA	stkA
 	STA	stkp
 	LDA	stkA
 	RSUB
-
-. A holds a number
-num	STA	tmpA
-
-	RMO	A, X
-
-	LDA	#digits
-	STA	digPtr	
-
-numL	RMO	X, A
-	COMP	#0
-	JEQ	write
-
-	DIV	#10
-	RMO	A, S	. S <- 123
-	MUL	#10
-	RMO	A, B	. B <- 1230
-	RMO	X, A	. A <- 1234
-	SUBR	B, A	. A <- 4
-
-	RMO	S, X
-
-	. increment digPtr
-	STA	@digPtr
-	LDA	digPtr
-	ADD	#3
-	STA	digPtr
-
-	J	numL
-
-. from digPtr to #digits
-write	LDA	#digits	
-	COMP	digPtr 
-	JEQ	numEx
-
-	LDA	digPtr
-	SUB	#3
-	STA	digPtr
-	LDA	@digPtr
-	ADD	#48
-	WD	#1	
-	J	write
-
-numEx	LDA	tmpA
-	RSUB	
-
-nl	STA	tmpA
-	LDA	#10
-	WD	#1
-	LDA	tmpA
-	RSUB
-
-. used by write
-tmpA    RESW	1
-tmpL	RESW	1
-
-txt	BYTE	C'SIX/XE'
-	BYTE	0
-
-digits	RESW	5
-digPtr	RESW	1
 
 . used by stack
 stkA	WORD	0 	
