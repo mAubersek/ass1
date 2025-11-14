@@ -2,7 +2,6 @@ prog	START	0
 
 	JSUB	sinit
 
-
 	. works up to fact(10)
 main	JSUB	read
 	COMP	#0
@@ -12,7 +11,6 @@ main	JSUB	read
 	J	main
 
 halt	J	halt
-aaa	RESW	1
 
 . recursive
 fact	STL	@stkp
