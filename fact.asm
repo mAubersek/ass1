@@ -2,10 +2,17 @@ prog	START	0
 
 	JSUB	sinit
 
-	JSUB	read
+
+	. works up to fact(10)
+main	JSUB	read
+	COMP	#0
+	JEQ	halt
+	JSUB	fact
 	JSUB	write
+	J	main
 
 halt	J	halt
+aaa	RESW	1
 
 . recursive
 fact	STL	@stkp
@@ -20,16 +27,19 @@ fact	STL	@stkp
 	SUB	#1
 	JSUB	fact
 
+	. after base case A contains 1
+	. then multiply by each value on stack
 bc	JSUB	spop
-	+LDX	@stkp
+	MUL	@stkp
 	JSUB	spop
 	LDL	@stkp
-
-	MULR	X, A
 	RSUB
 
 . reads from device FA, returns num in A
-read	CLEAR	A
+read	CLEAR	B
+	CLEAR	S
+
+readLp	CLEAR	A
 	+RD	#0xFA
 	COMP	#10 . LF
 	JEQ	readEx
@@ -41,7 +51,8 @@ read	CLEAR	A
 	MUL	#10	. multiply previous number by 10
 	ADDR	S, A	. add current digit
 	RMO	A, B	. store in B
-	J	read
+	J	readLp
+
 readEx	RMO	B, A
 	RSUB
 
@@ -75,6 +86,9 @@ print   JSUB	spop
 	WD	#1
 	TIX	len
 	JLT	print
+
+	LDA	#10
+	WD	#1
 	
 	JSUB	spop
 	LDL	@stkp
