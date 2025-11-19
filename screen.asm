@@ -34,4 +34,4 @@ screen	WORD	0xb800
 scrcols	WORD	80
 scrrows	WORD	25
 scrlen	WORD	2000
-	END	scrn 
+		END	scrn 

@@ -2,22 +2,18 @@ prog	START	0
 
 . S -> x coordinate
 . T -> y coordinate
-. A -> pixel address
-. X -> pixel representation - iirrggbb
-
-	LDS	#0
-	LDT	#0
-	LDX	#0xFF
 
 render	JSUB	update
 	JSUB	clcadr	. calculate address
-	RMO	X, A
-	STCH	@pixel	. draw pixel
+
+	CLEAR	A
+	LDCH	@pixAdr
+	SUB	#0x1A
+	STCH	@pixAdr	. draw pixAdr
+
 	J	render
 
 halt	J	halt
-
-
 
 update	STL	tempL
 
@@ -62,7 +58,6 @@ chcEx	LDL	tempL
 
 tempL	RESW	1
 
-
 . checks if coordinate is out
 . continues on opposite side
 . same for x and y since display is square
@@ -79,19 +74,19 @@ outgt	CLEAR	A
 outlt	LDA	width . A is 63
 	RSUB
 
-
 . calculate pixel address based on S and T
-. updates pixel value
+. updates pixAdr value
 clcadr	RMO	T, A
 	MUL	cols	. x * cols
 	ADDR	S, A	. + x
 	ADD	screen	. + origin
-	STA	pixel
+	STA	pixAdr
+
 	RSUB
 
 key	WORD	0xC000
-dir	WORD	0	. right, down, up, left
-pixel	RESW	1
+pixAdr
+	RESW	1
 
 width	WORD	63	. 0..63 = 64
 cols	WORD	64
@@ -100,7 +95,3 @@ screen	WORD	0xA000
 
 	END	prog
 
-
-. kaj rabim za snake game
-. vedet moram kako zgleda snake
-. torej kje je snake
